@@ -5,8 +5,8 @@ LOGIN = xkeprt03
 #CFLAGS += -fsanitize=address
 #LDFLAGS += -fsanitize=address
 
-OFILES = myftpclient.o
-HFILES = 
+OFILES = myftpclient.o server.o client.o
+HFILES = myftpclient.h server.h client.h 
 
 all: $(PROGS)
 
