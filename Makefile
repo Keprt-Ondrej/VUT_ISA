@@ -1,20 +1,17 @@
-PROGS = mytftpclient
+PROGS = mytftpclient 
 CC = g++
 CFLAGS = -pedantic -Wall -Wextra -g -Werror #-O2 #TODO verze C??
 LOGIN = xkeprt03
 #CFLAGS += -fsanitize=address
 #LDFLAGS += -fsanitize=address
 
-OFILES = myftpclient.o server.o client.o
-HFILES = myftpclient.h server.h client.h 
+OFILES = main.o server.o client.o
+HFILES = main.h server.h client.h 
 
 all: $(PROGS)
 
 $(PROGS): $(OFILES) $(HFILES)
 	$(CC) $(CFLAGS) -o  $(PROGS) $(OFILES)
-
-run: $(PROGS)
-	./$(PROGS)
 
 doxygen:
 	doxygen

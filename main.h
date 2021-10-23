@@ -1,7 +1,6 @@
 
-#ifndef __MYFTPCLIENT_H__
-#define __MUFTPCLIENT_H__
-
+#ifndef __MAIN_H__
+#define __MAIN_H__ 
 
 #include <iostream>
 #include <getopt.h>

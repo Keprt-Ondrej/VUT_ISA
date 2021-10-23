@@ -1,4 +1,4 @@
-#include "myftpclient.h"
+#include "main.h"
 #include "server.h"
 #include "client.h"
 
@@ -17,7 +17,8 @@ int main(int argc, char *argv[]){
     for(;;){
         switch(getopt(argc, argv, "RWd:pt:Ts:Smc:Ca:Ah")){ 
             case 'h':
-                cout << "help\n";
+                cout << "help:\n";
+                cout << "./myftpclient R/W -d adresar/soubor -t timeout -s velikost -a adresa,port -c mód -m\n";
                 return 0;
             continue;
 
@@ -91,7 +92,7 @@ int main(int argc, char *argv[]){
         return 1;
     }    
     
-    #if 0
+    #if 1
     cout << "path:\t" << path << "\n";
     cout << "timeout:" << timeout << "\n";
     cout << "size:\t" << size << "\n";
