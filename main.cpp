@@ -1,6 +1,7 @@
 #include "main.h"
-#include "server.h"
-#include "client.h"
+#include "read_from_server.h"
+#include "write_on_server.h"
+#include <regex>
 
 int main(int argc, char *argv[]){
     using namespace std; 
@@ -24,7 +25,7 @@ int main(int argc, char *argv[]){
 
             case 'R':
             if (behavior == undefined){
-                behavior = server;
+                behavior = read_from_server;
             }
             else{
                 cerr << "Choose only one behavior!\n";
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]){
 
             case 'W':
                 if (behavior == undefined){
-                    behavior = client;
+                    behavior = write_on_server;
                 } 
                 else{
                     cerr << "Choose only one behavior!\n";
@@ -90,24 +91,47 @@ int main(int argc, char *argv[]){
     if (b_path == false){
         cerr << "Select path to file!\n";
         return 1;
-    }    
-    
+    }
+
+    smatch match;
+    regex port_reg (",[0-9a-zA-Z]*");
+    int port;
+    regex_search(ip_port,match,port_reg);
+    if (match.ready()){
+        string port_str = match.str(0);
+        port_str.erase(0,1);
+        try{            
+            port = stoi(port_str);
+        }
+        catch(exception){
+            cerr<< "Bad port:" << port_str << endl;
+            return 1;
+        }
+        if ((port < 0) |(port > 65535)){
+            cerr<< "Bad port:" << port_str << endl;
+            return 1;
+        }       
+    }
+    string ip = regex_replace(ip_port,port_reg,"");
+
     #if 1
-    cout << "path:\t" << path << "\n";
-    cout << "timeout:" << timeout << "\n";
-    cout << "size:\t" << size << "\n";
-    cout << "multicast:" << b_multicast << "\n";   
-    cout << "mod:\t" << mode << "\n";
-    cout << "ip,port:\t" << ip_port << "\n";
+    cerr << "path:\t" << path << "\n";
+    cerr << "timeout:" << timeout << "\n";
+    cerr << "size:\t" << size << "\n";
+    cerr << "multicast:" << b_multicast << "\n";   
+    cerr << "mod:\t" << mode << "\n";
+    cerr << "ip: " << ip << "\n";
+    cerr << "port: " << port << "\n";
+    cerr << "--------------------------------------------\n";
     #endif
 
     switch(behavior){
-        case client:
-            return client_main(path,timeout,size,b_multicast,mode,ip_port); //std::string &path,int timeout,int size,bool b_multicast,std::string&mod, std::string ip_port
+        case write_on_server:
+            return write_on_server_main(path,timeout,size,b_multicast,mode,ip,port);
         break;
 
-        case server:
-            return server_main(path,timeout,size,b_multicast,mode,ip_port);
+        case read_from_server:
+            return read_from_server_main(path,timeout,size,b_multicast,mode,ip,port);
         break;
 
         default:

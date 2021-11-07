@@ -5,8 +5,8 @@ LOGIN = xkeprt03
 #CFLAGS += -fsanitize=address
 #LDFLAGS += -fsanitize=address
 
-OFILES = main.o server.o client.o
-HFILES = main.h server.h client.h 
+OFILES = main.o read_from_server.o write_on_server.o test.o functions.o
+HFILES = main.h read_from_server.h write_on_server.h test.h functions.h
 
 all: $(PROGS)
 

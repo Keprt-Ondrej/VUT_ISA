@@ -7,8 +7,8 @@
 
 typedef enum{
     undefined,
-    client,
-    server
+    write_on_server,
+    read_from_server
 } behavior_t; 
 
 #endif
