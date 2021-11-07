@@ -3,6 +3,8 @@
 #include "write_on_server.h"
 #include <regex>
 
+//https://datatracker.ietf.org/doc/html/rfc1350
+
 int main(int argc, char *argv[]){
     using namespace std; 
      
