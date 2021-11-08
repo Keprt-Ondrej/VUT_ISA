@@ -1,4 +1,7 @@
 #include "functions.h"
+#include <string.h>
+#include <arpa/inet.h>
+#include <iostream>
 
 void print_time(){
     using namespace std;
@@ -9,5 +12,4 @@ void print_time(){
     <<time->tm_mon + 1 <<" "<<time->tm_hour<<":"
     <<time->tm_min<<":"<<time->tm_sec<< "] ";
 }
-
 
