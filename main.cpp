@@ -11,7 +11,7 @@ int main(int argc, char *argv[]){
     behavior_t behavior = undefined;
     bool b_path = false;
     string path;    
-    int timeout = 120;
+    int timeout = -1;
     int size = 42; // TODO podivat se DO RFC kolik to ma byt
     bool b_multicast = false;
     string mode = "octet"; //mód, který může nabýt jen hodnot "ascii" (nebo "netascii") a "binary" (nebo "octet"), čímž klient specifikuje mód přenosu dat. Implicitně (bez přítomnosti argumentu) se uvažuje binární transfer. 
