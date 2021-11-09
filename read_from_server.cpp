@@ -3,7 +3,6 @@
 #include "comunication.h"
 
 int read_from_server_main(std::string &path,int timeout,int size,bool b_multicast,std::string&mode, std::string &ip,std::string & port){
-    std::cerr << "read_from server\n";
     comunication klient(ip,port,timeout);
     klient.create_socket();
     packet_data packet;
@@ -14,23 +13,31 @@ int read_from_server_main(std::string &path,int timeout,int size,bool b_multicas
 
     int16_t block;
     int16_t recv_data_size = INT16_MAX;
-    while(recv_data_size >= block_size){
-        if (klient.receive_msg(packet.buffer_size,packet.buffer)){
-            packet.start_buffer();
-            int16_t opcode = packet.get_2B(); 
-            std::cerr << opcode << "\n";
-            if (opcode != TFTP_DATA){
-                std::cerr << "RECEIVED ERROR\n";
-                return 42;
+    unsigned long total_received = 0;
+    print_time(); std::cout << "Write request send on server "<<ip << ":"<<port<<"\n";
+    while(!(recv_data_size < block_size)){
+        recv_data_size = klient.receive_msg(packet.buffer_size,packet.buffer);
+        recv_data_size -= 4; 
+        packet.start_buffer();
+        int16_t opcode = packet.get_2B(); 
+        //std::cerr << opcode << "\n";
+        if (opcode == TFTP_DATA){
+            block = packet.get_2B();            
+            if (recv_data_size  > packet.buffer_size - 4){
+                recv_data_size = packet.buffer_size - 4;
             }
-            block = packet.get_2B();
-            recv_data_size = packet.size();
-            std::cout << packet.end_buffer;
+            total_received += recv_data_size;
+            print_time(); std::cout << "block: " << block << " data received "<<recv_data_size << "B, total received: " << total_received << "B\n"; 
             fwrite(packet.end_buffer,1,packet.size(),file);
+            packet.create_ACK(TFTP_ACK,block);
             klient.send_msg(packet.size(),packet.buffer);
         }
+        else{
+            std::cerr << "RECEIVED ERROR\n";
+            return 42;
+        }
+        
+        
     }
-    std::cout << "\n";
-
    return 0;
 }

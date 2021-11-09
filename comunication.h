@@ -51,6 +51,7 @@ class packet_data{
     void create_request(int16_t opcode,std::string &path,std::string &mode);
     int16_t get_2B();
     void create_ACK(int16_t opcode,int16_t block);
+    void clear_buffer();
 
     public:
     constexpr static int buffer_size = block_size + 4;  // 2 opcode + 2 block

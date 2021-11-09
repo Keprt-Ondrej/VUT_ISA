@@ -104,13 +104,7 @@ void packet_data::create_ACK(int16_t opcode,int16_t block){
     add_2B(block);
 }
 
-
-/*
-htons() host to network short
-
-htonl() host to network long
-
-ntohs() network to host short
-
-ntohl() network to host long
-*/
+void packet_data::clear_buffer(){
+    memset(buffer,0,buffer_size);
+    end_buffer = buffer;
+}
