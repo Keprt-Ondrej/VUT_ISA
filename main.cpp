@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
         bool b_path = false;
         string path;    
         int timeout = -1;
-        int size = 42; // TODO podivat se DO RFC kolik to ma byt
+        int size = 512; 
         bool b_multicast = false;
         string mode = "octet"; //mód, který může nabýt jen hodnot "ascii" (nebo "netascii") a "binary" (nebo "octet"), čímž klient specifikuje mód přenosu dat. Implicitně (bez přítomnosti argumentu) se uvažuje binární transfer. 
         string ip_port = "127.0.0.1,69";    
@@ -164,7 +164,8 @@ int main(int argc, char *argv[]){
         }
         string ip = regex_replace(ip_port,port_reg,"");
 
-        #if 0
+        #if 1
+        cerr << "--------------------------------------------\n";
         cerr << "path:\t" << path << "\n";
         cerr << "timeout:" << timeout << "\n";
         cerr << "size:\t" << size << "\n";

@@ -22,6 +22,8 @@
 #define TFTP_DATA   3     //Data (DATA)
 #define TFTP_ACK    4     //Acknowledgment (ACK)
 #define TFTP_ERR    5     //Error (ERROR)
+#define TFTP_OPTION_ACK 6   
+#define TFTP_OACK_ERR   8
 
 class comunication{
     public:
@@ -34,6 +36,7 @@ class comunication{
 
     private:
     int socket_id;
+    bool ipv4;
     struct addrinfo *connection_info;
     std::string ip;
     std::string &port;
@@ -42,7 +45,7 @@ class comunication{
 
 class packet_data{
     public:
-    packet_data();
+    packet_data(int blksize);
     ~packet_data();
     void start_buffer();
     void add_2B(int16_t c);
@@ -54,8 +57,9 @@ class packet_data{
     void clear_buffer();
 
     public:
-    constexpr static int buffer_size = block_size + 4;  // 2 opcode + 2 block
-    char buffer[buffer_size];
+    int buffer_size;
+    int packet_size;  
+    char *buffer;
     char *end_buffer;
 };
 

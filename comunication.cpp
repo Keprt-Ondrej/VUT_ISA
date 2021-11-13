@@ -1,19 +1,21 @@
 #include "comunication.h"
+#include <arpa/inet.h>
 
 comunication::comunication(std::string &ip,std::string &port,int timeout): port(port),ip(ip),connection_info(NULL),timeout(timeout){
+    
     return;
 }
 
 int comunication::create_socket(){ 
     int domain;   
     struct addrinfo hint;
-    if (ip.find(":") == -1){
-        domain = AF_INET;      
-        std::cerr << "ipv4\n";
+    if (ip.find(":") == -1){        
+        domain = AF_INET;
     }
     else{
         domain = AF_INET6;
     }
+
     hint.ai_family = domain;
     hint.ai_socktype = SOCK_DGRAM;
     hint.ai_flags = AI_PASSIVE;
@@ -42,8 +44,6 @@ int comunication::create_socket(){
             exit(42);
         } 
     }
-
-
     return 0;
 }
 
@@ -61,11 +61,16 @@ int comunication::receive_msg(size_t buffer_size, char *msg){
 
 }
 
-packet_data::packet_data(){
+packet_data::packet_data(int blksize){
+    buffer_size = blksize;
+    packet_size = blksize + 4;  // 2 bytes opcode, 2 bytes block number
+    buffer = new char[packet_size]();
     end_buffer = buffer;
 }
 
-packet_data::~packet_data(){}
+packet_data::~packet_data(){
+    delete(buffer);
+}
 
 void packet_data::add_2B(int16_t c){
     *(int16_t *)end_buffer = htons(c);
