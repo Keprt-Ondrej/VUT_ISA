@@ -7,14 +7,19 @@ int read_from_server_main(std::string &path,int timeout,int size,bool b_multicas
     klient.create_socket();
     packet_data packet;
 
-    FILE *file = fopen(path.c_str(),"w");    
+    FILE *file = open_file(path,mode,'w');
+    if (file == NULL){
+        std::cerr << "Can not open file " << path << "\n";
+        exit(42);
+    }
+    
     packet.create_request(TFTP_READ,path,mode);
     klient.send_msg(packet.size(),packet.buffer);
 
     int16_t block;
     int16_t recv_data_size = INT16_MAX;
     unsigned long total_received = 0;
-    print_time(); std::cout << "Write request send on server "<<ip << ":"<<port<<"\n";
+    print_time(); std::cout << "Read request send on server "<<ip << ":"<<port<<"\n";
     while(!(recv_data_size < block_size)){
         recv_data_size = klient.receive_msg(packet.buffer_size,packet.buffer);
         recv_data_size -= 4; 
@@ -27,8 +32,8 @@ int read_from_server_main(std::string &path,int timeout,int size,bool b_multicas
                 recv_data_size = packet.buffer_size - 4;
             }
             total_received += recv_data_size;
-            print_time(); std::cout << "block: " << block << " data received "<<recv_data_size << "B, total received: " << total_received << "B\n"; 
-            fwrite(packet.end_buffer,1,packet.size(),file);
+            //print_time(); std::cout << "block: " << block << " data received "<<recv_data_size << "B, total received: " << total_received << "B\n"; 
+            fwrite(packet.end_buffer,1,recv_data_size,file);
             packet.create_ACK(TFTP_ACK,block);
             klient.send_msg(packet.size(),packet.buffer);
         }
@@ -39,5 +44,8 @@ int read_from_server_main(std::string &path,int timeout,int size,bool b_multicas
         
         
     }
+
+    print_time(); std::cout << "Transfer completed without errors\n";
+    fclose(file);
    return 0;
 }
