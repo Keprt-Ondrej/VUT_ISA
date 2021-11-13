@@ -1,3 +1,4 @@
 *.o
 mytftpclient 
 settings.json
+velky_soubor*
