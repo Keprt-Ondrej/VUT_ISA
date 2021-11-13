@@ -1,12 +1,12 @@
-PROJEKT = dokumentace
+PROJEKT = manual
 
 all:
 	#latex $(PROJEKT).tex
 	#dvips -t a4 $(PROJEKT).dvi
 	#ps2pdf $(PROJEKT).ps
 	
-	pdflatex dokumentace.tex
-	mv dokumentace.pdf ../
+	pdflatex $(PROJEKT).tex
+	mv $(PROJEKT).pdf ../
 
 .PHONY: 
 clean:
