@@ -1,3 +1,5 @@
+-R -d velky_soubor.pdf -a 192.168.1.32,69 -c octet -s 45656456
+-W -d velky_soubor.pdf -a 192.168.1.32,69 -c octet
 end
 
 
@@ -9,3 +11,5 @@ testy na read:
 -R -d velky_soubor2.pdf -a fe80::7dd8:534e:9123:f0dc,69 -c octet
 -R -d velky_soubor.pdf -a 192.168.1.32,69 -c ascii -t 2900 -s 25456456 -c ascii
 -R -d velky_soubor.pdf -c ascii -t 2900 -s 25456456 -c ascii
+
+-W -d velky_soubor.pdf -a 192.168.1.32,69 -c ascii
