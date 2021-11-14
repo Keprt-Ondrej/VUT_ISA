@@ -17,8 +17,14 @@ int write_on_server_main(std::string &path,int timeout,int size,bool b_multicast
         ssize_t data_read = SSIZE_MAX; // pocet dat, co byla prectena 
         unsigned long long total_data_send = 0;
         file = open_file(path,mode,'r');
-
-
+        fseek(file, 0, SEEK_END); // seek to end of file
+        ssize_t file_size = ftell(file); // get current file pointer
+        fseek(file, 0, SEEK_SET); // seek back to beginning of file
+        // proceed with allocating memory and reading the file
+        char str[1000] = {""};
+        snprintf(str, sizeof(str), "%zu", file_size);
+        std::cerr << file_size << "\t "<<str << "\n";
+exit(42);
         packet.create_request(TFTP_WRITE,path,mode,"45");
         /*
         packet.add_2B(TFTP_WRITE);
