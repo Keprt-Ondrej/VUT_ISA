@@ -15,7 +15,7 @@
 #include <string.h>
 #include <iostream>
 
-#define block_size 512
+#define TFTP_DEFAUL_BLOK_SIZE 512
                 //opcode  operation
 #define TFTP_READ   1     //Read request (RRQ)
 #define TFTP_WRITE  2     //Write request (WRQ)
@@ -24,6 +24,8 @@
 #define TFTP_ERR    5     //Error (ERROR)
 #define TFTP_OPTION_ACK 6   
 #define TFTP_OACK_ERR   8
+
+#define DEFAULT_TIMEOUT 3
 
 class comunication{
     public:
@@ -34,13 +36,17 @@ class comunication{
     int send_msg(size_t msg_size,const char *msg);
     int receive_msg(size_t buffer_size, char *msg);
 
-    private:
+    int get_mtu_size();
+    int set_timeout(int timeout);
+
+    public:
     int socket_id;
     bool ipv4;
     struct addrinfo *connection_info;
     std::string ip;
     std::string &port;
-    int timeout;    
+    int timeout;   
+    int f_mtu_size;  
 };
 
 class packet_data{
@@ -48,13 +54,17 @@ class packet_data{
     packet_data(int blksize);
     ~packet_data();
     void start_buffer();
+    void print_buffer();
     void add_2B(int16_t c);
+    void add_1B(char c);
     void add_string(const char *string);
     int size();
-    void create_request(int16_t opcode,std::string &path,std::string &mode);
+    void create_request(int16_t opcode,std::string &path,std::string &mode,char *file_size);
     int16_t get_2B();
+    char *get_string();
     void create_ACK(int16_t opcode,int16_t block);
     void clear_buffer();
+    void change_buffer(size_t blk_size);
 
     public:
     int buffer_size;

@@ -2,6 +2,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <iostream>
+#include <chrono>
+#include <fstream>
 
 void print_time(){
     using namespace std;
@@ -27,5 +29,10 @@ FILE *open_file(std::string &path,std::string &mode, char RW){
         exit(42);
     }
     mode_string[2] = '\0';
-    return fopen(path.c_str(),mode_string);
+
+    FILE * file = fopen(path.c_str(),mode_string);
+    if (file == NULL){
+        throw std::exception();
+    }
+    return file;
 }

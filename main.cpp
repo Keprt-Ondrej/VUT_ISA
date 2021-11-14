@@ -2,6 +2,7 @@
 #include "read_from_server.h"
 #include "write_on_server.h"
 #include <regex>
+#include "comunication.h"
 
 //https://datatracker.ietf.org/doc/html/rfc1350
 
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]){
         bool b_path = false;
         string path;    
         int timeout = -1;
-        int size = 512; 
+        int size = TFTP_DEFAUL_BLOK_SIZE;
         bool b_multicast = false;
         string mode = "octet"; //mód, který může nabýt jen hodnot "ascii" (nebo "netascii") a "binary" (nebo "octet"), čímž klient specifikuje mód přenosu dat. Implicitně (bez přítomnosti argumentu) se uvažuje binární transfer. 
         string ip_port = "127.0.0.1,69";    
@@ -68,7 +69,8 @@ int main(int argc, char *argv[]){
             switch(getopt(word_count,karel, "RWd:pt:Ts:Smc:Ca:Ah")){ 
                 case 'h':
                     cout << "help:\n";
-                    cout << "./myftpclient R/W -d adresar/soubor -t timeout -s velikost -a adresa,port -c mód -m\n";
+                    cout << "-R/W -d path_to_file -t timeout -s block_size -a address,port -c netascii/octet\n";
+                    cout << "end <-- write for exit\n";
                     return 0;
                 continue;
 
@@ -99,8 +101,8 @@ int main(int argc, char *argv[]){
 
                 case 't':
                     timeout = atoi(optarg);
-                    if(timeout <= 0){
-                        cerr << "Timeout must be number > 0\n";
+                    if(timeout <= 0 && timeout > 300){
+                        cerr << "Timeout must be number: 0 < timeout < 256\n";
                         return 1;
                     }
                 continue;  
