@@ -14,14 +14,14 @@ unsigned int arg_preparer(std::string &str){
         str.erase(i,1);    //skip nazacatku
     }
 
-    while(i < str.size()){  //skip na zacatku
+    while(i < str.size()){  
         if (isspace(str.at(i))){
             if (old != str.at(i)){
                 space_count++;
             }
             else{
-                //str.erase(i,1);
-                //i--;
+                str.erase(i,1);
+                i--;
             }                       
         }
         old = str.at(i);
@@ -37,15 +37,15 @@ int main(int argc, char *argv[]){
     using namespace std;
     while(1){
         string start = "";
+        cout << "> ";
         getline(cin,start);
 
         if (!strcmp("end",start.c_str())){
             return 0;
         }
 
-          
         unsigned int argc = arg_preparer(start);
-        start + "b";    //aby nedoslo k segfaultu, kdyz za posledni budu vkladat \0
+        start.push_back(' ');    //aby nedoslo k segfaultu, kdyz za posledni budu vkladat, MUSI zde byt MEZERA!
         argc++;       //bezne je v argc na prvnim miste jmeno souboru, ze ho musim "umele pridat"
         char *arguments[argc];
         char *p =const_cast<char *>(start.c_str());        
@@ -53,11 +53,10 @@ int main(int argc, char *argv[]){
             arguments[i] = p;
             while(!isspace(p[0])){
                 p++;
-            }
+            }            
             p[0] = '\0';
             p++;
         }
-        
         behavior_t behavior = undefined;
         bool b_path = false;
         string path;    
