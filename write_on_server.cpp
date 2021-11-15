@@ -1,3 +1,10 @@
+/**
+ * @file write_on_server.cpp
+ * @brief Posilani dat na server
+ * 
+ * @author Ondřej Keprt (xkeprt03@stud.fit.vutbr.cz)
+*/
+
 #include "write_on_server.h"
 
 void send_data(comunication &klient,packet_data &packet,packet_data &packet_ack,FILE *file, std::string &file_size){
@@ -51,7 +58,7 @@ void send_data(comunication &klient,packet_data &packet,packet_data &packet_ack,
 void write_on_server_main(std::string &path,int timeout,int size,bool b_multicast,std::string&mode, std::string &ip,std::string &port){
     FILE *file;
     try{
-        comunication klient(ip,port,timeout);
+        comunication klient(ip,port,timeout,false); //nastavi timeout zadany, uzivatelem nebo defaultni, pokud server odmitne uzivateluv timeout, ve funkci OACK_option_handler_timeout nastavi timeout klienta na defaultni velikost
         klient.create_socket();
         packet_data packet(size);
         packet_data packet_ack(TFTP_DEFAUL_BLOK_SIZE); // na ack packety neni potreba vice
@@ -85,7 +92,7 @@ void write_on_server_main(std::string &path,int timeout,int size,bool b_multicas
             std::string{packet.get_string()};  //potrebuji zahodit option specifier tsize
             std::string{packet.get_string()};  //potrebuji zahodit value tsize
             packet.OACK_option_handler_blksize(size);
-            packet.OACK_option_handler_timeout(timeout);
+            packet.OACK_option_handler_timeout(klient,timeout);
             send_data(klient,packet,packet_ack,file,file_size_str);
         }
         else if (opcode == TFTP_ACK){

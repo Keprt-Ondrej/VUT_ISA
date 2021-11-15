@@ -1,3 +1,9 @@
+/**
+ * @file read_from_server.cpp
+ * @brief Prijem dat ze serveru
+ * 
+ * @author Ondřej Keprt (xkeprt03@stud.fit.vutbr.cz)
+*/
 #include "read_from_server.h"
 
 void receive_data(comunication &klient,packet_data &packet,FILE *file, std::string &file_size,int16_t start =0){
@@ -29,7 +35,7 @@ void receive_data(comunication &klient,packet_data &packet,FILE *file, std::stri
 void read_from_server_main(std::string &path,int timeout,int size,bool b_multicast,std::string&mode, std::string &ip,std::string & port){
     FILE *file;
     try{
-        comunication klient(ip,port,timeout);
+        comunication klient(ip,port,timeout,true); //nastavi timeout zadany, uzivatelem nebo defaultni, pokud server odmitne uzivateluv timeout, ve funkci OACK_option_handler_timeout nastavi timeout klienta na defaultni velikost
         klient.create_socket();
         packet_data packet(size);
 
@@ -68,7 +74,7 @@ void read_from_server_main(std::string &path,int timeout,int size,bool b_multica
                 throw std::exception();
             }
             packet.OACK_option_handler_blksize(size);
-            packet.OACK_option_handler_timeout(timeout);
+            packet.OACK_option_handler_timeout(klient,timeout);
             packet.create_ACK(TFTP_ACK,0);
             klient.send_msg(packet.size(),packet.buffer);
             receive_data(klient,packet,file,file_size);            

@@ -129,6 +129,8 @@ int main(){
 
                     case 'm':
                         b_multicast = true;
+                        cerr << "Multicast not implemented\n";
+                        throw std::exception();
                     continue;
 
                     case 'c':

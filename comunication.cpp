@@ -1,8 +1,17 @@
+/**
+ * @file comunication.cpp
+ * @brief tridy pres ktere se uskutecnuje komunikace
+ * 
+ * obsahuje take pomocne funkce 
+ * 
+ * @author Ondřej Keprt (xkeprt03@stud.fit.vutbr.cz)
+*/
+
 #include "comunication.h"
 #include <exception>
 
 
-comunication::comunication(std::string &ip,std::string &port,int timeout): port(port),ip(ip),connection_info(NULL),timeout(timeout){    
+comunication::comunication(std::string &ip,std::string &port,int timeout,bool use_multiply_timeout): port(port),ip(ip),connection_info(NULL),timeout(timeout),use_multiply_timeout(use_multiply_timeout){    
     return;
 }
 
@@ -59,11 +68,21 @@ int comunication::receive_msg(size_t buffer_size, char *msg){
 }
 
 void comunication::set_timeout(int timeout_extern){  //menil se timeout pomoci prikazu  
+    struct timeval time;    
     if(timeout_extern == -1){
         timeout_extern = DEFAULT_TIMEOUT;
+        timeout = timeout_extern;
     }
-    struct timeval time;
-    time.tv_sec = (timeout_extern*TIMEOT_CNT)+1;    //uvazujeme, ze server posila data opakovane TIMEOT_CNTx (refernci server pro windows), +1 pro zpozdeni PC
+    else{
+        timeout = timeout_extern;
+    }
+    if(use_multiply_timeout){
+        time.tv_sec = (timeout_extern*TIMEOT_CNT)+1; //uvazujeme, ze server posila data opakovane TIMEOT_CNTx (refernci server pro windows), +1 pro zpozdeni PC
+    }
+    else{
+        time.tv_sec = timeout_extern+1;
+    }
+    
     time.tv_usec = 0;
     if (setsockopt(socket_id,SOL_SOCKET,SO_RCVTIMEO,&time,sizeof(time))){
         print_time(); std::cerr << "timeout setup fail\n";
@@ -86,11 +105,6 @@ packet_data::~packet_data(){
 void packet_data::add_2B(int16_t c){
     *(int16_t *)end_buffer = htons(c);
     end_buffer += 2;
-}
-
-void packet_data::add_1B(char c){
-    *end_buffer = c;
-    end_buffer += 1;
 }
 
 void packet_data::add_string(const char *string){
@@ -127,13 +141,6 @@ char * packet_data::get_string(){
     return tmp;
 }
 
-void packet_data::print_buffer(){
-    for (int i = 0; i < packet_size;i++){
-        putc(buffer[i],stdout);        
-    }
-    putc('\n',stdout);
-}
-
 void packet_data::create_ACK(int16_t opcode,int16_t block){
     end_buffer = buffer;
     add_2B(opcode);
@@ -164,14 +171,15 @@ void packet_data::OACK_option_handler_blksize(int size){
     }
 }
 
-void packet_data::OACK_option_handler_timeout(int timeout){
+void packet_data::OACK_option_handler_timeout(comunication &klient,int timeout){
     if(timeout != -1){  //menil se timeout pomoci prikazu
         std::string{get_string()}; //zahozeni identifikatoru pro bloksize
         size_t real_timeout = atoi(std::string{get_string()}.c_str());                
         if (real_timeout == 0){ //pokud server vrati alternativni hodnotu timeoutu, zmeni ji v nastaveni
             //server zamitnul timeout hodnotu
+            klient.set_timeout(DEFAULT_TIMEOUT);
             print_time(); std::cerr << "Server refused using timeout: "<< timeout << ", transfer resume with timeout: " << DEFAULT_TIMEOUT << "\n";
-        }                
+        }                     
     }
 }
 
@@ -186,7 +194,7 @@ void packet_data::option_setup(int size,int timeout){
     }
 }
 
-void print_time(){      //https://stackoverflow.com/questions/16077299/how-to-print-current-time-with-milliseconds-using-c-c11
+void print_time(){
     using std::chrono::system_clock;
     auto currentTime = std::chrono::system_clock::now();
     char buffer[80];

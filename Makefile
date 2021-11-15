@@ -20,7 +20,7 @@ pdf:
 	$(MAKE) -C dokumentace/
 
 pack: pdf clean 	#zkuste to psat zvrchu dolu, jak to mate napr ve VS code at v tom neni bordel :D
-	zip $(LOGIN).zip doxyfile Makefile README.txt *.c  *.cpp *.h manual.pdf
+	tar -cv --file=$(LOGIN).tar doxyfile Makefile README.txt *.c  *.cpp *.h manual.pdf
 
 clean:
 	$(MAKE) -C dokumentace/ clean
