@@ -73,7 +73,7 @@ int read_from_server_main(std::string &path,int timeout,int size,bool b_multicas
                 throw std::exception();
             }  
             if(size != TFTP_DEFAUL_BLOK_SIZE){
-                std::string{packet.get_string()}; //zahozeni identifikatoru pro bloksize
+                std::string{packet.get_string()}; //zahozeni identifikatoru pro blok
                 size_t real_size = atoi(std::string{packet.get_string()}.c_str());
                 if (real_size != size){
                     packet.change_buffer(real_size);

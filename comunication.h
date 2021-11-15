@@ -80,7 +80,8 @@ class packet_data{
 void OACK_option_handler_blksize(comunication &klient,packet_data &packet,int size);
 void OACK_option_handler_timeout(comunication &klient,packet_data &packet,int timeout);
 
-
+void print_time();
+FILE *open_file(std::string &path,std::string &mode, char RW);
 
 
 

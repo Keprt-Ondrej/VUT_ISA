@@ -5,7 +5,6 @@
 
 #include <iostream>
 #include <stdexcept>
-#include "functions.h"
 #include "comunication.h"
 #include <sys/statvfs.h>
 #include <exception>

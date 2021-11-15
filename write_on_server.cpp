@@ -1,5 +1,4 @@
 #include "write_on_server.h"
-#include "functions.h"
 #include "comunication.h"
 #include <sys/stat.h>
 
