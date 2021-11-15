@@ -13,6 +13,7 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 
-int read_from_server_main(std::string &path,int timeout,int size,bool b_multicast,std::string&mode, std::string &ip,std::string &port);
+void read_from_server_main(std::string &path,int timeout,int size,bool b_multicast,std::string&mode, std::string &ip,std::string &port);
+void receive_data(comunication &klient,packet_data &packet,FILE *file, std::string &file_size,int16_t start);
 
 #endif

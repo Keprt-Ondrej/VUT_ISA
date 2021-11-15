@@ -15,6 +15,9 @@
 #include <string.h>
 #include <iostream>
 #include "limits.h"
+#include <arpa/inet.h>
+#include <chrono>
+
 
 #define TFTP_DEFAUL_BLOK_SIZE 512
                 //opcode  operation
@@ -26,21 +29,20 @@
 #define TFTP_OPTION_ACK 6   
 #define TFTP_OACK_ERR   8
 
-#define DEFAULT_TIMEOUT 3
+#define DEFAULT_TIMEOUT 5
+#define TIMEOT_CNT 6
 
 class comunication{
     public:
     comunication(std::string &ip,std::string &port,int timeout);
     ~comunication();
     
-    int create_socket();
+    void set_timeout(int timeout);
+    void create_socket();
     int send_msg(size_t msg_size,const char *msg);
     int receive_msg(size_t buffer_size, char *msg);
 
-    int get_mtu_size();
-    void set_timeout(int timeout);
-
-    public:
+    private:
     int socket_id;
     bool ipv4;
     struct addrinfo *connection_info;
@@ -77,15 +79,7 @@ class packet_data{
     char *end_buffer;
 };
 
-void OACK_option_handler_blksize(comunication &klient,packet_data &packet,int size);
-void OACK_option_handler_timeout(comunication &klient,packet_data &packet,int timeout);
-
 void print_time();
 FILE *open_file(std::string &path,std::string &mode, char RW);
-
-
-
-
-
 
 #endif

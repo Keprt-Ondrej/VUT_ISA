@@ -1,12 +1,19 @@
+/**
+ * @file main.cpp
+ * @brief Vstup do programu mytftpclient
+ * 
+ * Nacitani a zpracovani prikazove radky programu 
+ * 
+ * @author Ondřej Keprt (xkeprt03@stud.fit.vutbr.cz)
+ * 
+*/
+
 #include "main.h"
 #include "read_from_server.h"
 #include "write_on_server.h"
-#include <regex>
 #include "comunication.h"
 
-//https://datatracker.ietf.org/doc/html/rfc1350
-
-unsigned int arg_preparer(std::string &str){
+int arg_preparer(std::string &str){
     unsigned int i = 0;
     unsigned int space_count = 0;
     char old = '\0';
@@ -20,35 +27,37 @@ unsigned int arg_preparer(std::string &str){
                 space_count++;
             }
             else{
-                str.erase(i,1);
-                i--;
+                str.erase(i,1); //mazu vetsi mezery
+                i--;        //musim zmensit, jinak bych jej zvetsil a to nechci, musi zustat stejne velke
             }                       
         }
         old = str.at(i);
         i++;
     }
-    if(isspace(str.at(i-1))){
-        return space_count;
+    if(isspace(str.at(i-1))){   
+        return space_count; //pokud byl na konci whitespace => spocitalo to spravne slova
     }
-    else return ++space_count;
+    else return ++space_count; //slov je o 1 vic jak mezer
 }
 
-int main(int argc, char *argv[]){
+int main(){
     using namespace std;
     while(1){
         string start = "";
         cout << "> ";
-        getline(cin,start);
+        getline(cin,start); //prikazova radka programu
 
+        //ukonceni programu, kdyz jiz nechci stahovat dalsi soubory
         if (!strcmp("end",start.c_str())){
             return 0;
         }
 
         unsigned int argc = arg_preparer(start);
         start.push_back(' ');    //aby nedoslo k segfaultu, kdyz za posledni budu vkladat, MUSI zde byt MEZERA!
-        argc++;       //bezne je v argc na prvnim miste jmeno souboru, ze ho musim "umele pridat"
+        argc++;       //bezne je v argc na prvnim miste jmeno souboru, zde ho musim "umele pridat" aby jej getopt nepreskocilo
         char *arguments[argc];
-        char *p =const_cast<char *>(start.c_str());        
+        char *p =const_cast<char *>(start.c_str());  
+        //ukladam ukazatele do pole, vytvarim umele argv, co byva pri spusteni programu      
         for(int i = 1; i < argc;i++){
             arguments[i] = p;
             while(!isspace(p[0])){
@@ -67,83 +76,88 @@ int main(int argc, char *argv[]){
         string ip_port = "127.0.0.1,69";    
 
         optind = 1;
-        for(;;){
-            switch(getopt(argc,arguments, "RWd:pt:Ts:Smc:Ca:Ah")){ 
-                case 'h':
-                    cout << "help:\n";
-                    cout << "-R/W -d path_to_file -t timeout -s block_size -a address,port -c netascii/octet\n";
-                    cout << "end <-- write for exit\n";
-                    return 0;
-                continue;
+        try{
+            for(;;){
+                switch(getopt(argc,arguments, "RWd:pt:Ts:Smc:Ca:Ah")){ 
+                    case 'h':
+                        cout << "help:\n";
+                        cout << "-R/W -d path_to_file -t timeout -s block_size -a address,port -c netascii/octet\n";
+                        cout << "end <-- write for exit\n";
+                        throw std::exception();
+                    continue;
 
-                case 'R':
-                if (behavior == undefined){
-                    behavior = read_from_server;
-                }
-                else{
-                    cerr << "Choose only one behavior!\n";
-                    return 1;
-                }               
-                continue;
-
-                case 'W':
+                    case 'R':
                     if (behavior == undefined){
-                        behavior = write_on_server;
-                    } 
+                        behavior = read_from_server;
+                    }
                     else{
                         cerr << "Choose only one behavior!\n";
-                        return 1;
-                    }  
-                continue;
+                        throw std::exception();
+                    }               
+                    continue;
 
-                case 'd':
-                    b_path = true;
-                    path = optarg;
-                continue;
+                    case 'W':
+                        if (behavior == undefined){
+                            behavior = write_on_server;
+                        } 
+                        else{
+                            cerr << "Choose only one behavior!\n";
+                            throw std::exception();
+                        }  
+                    continue;
 
-                case 't':
-                    timeout = atoi(optarg);
-                    if(timeout <= 0 && timeout > 300){
-                        cerr << "Timeout must be number: 0 < timeout < 256\n";
-                        return 1;
-                    }
-                continue;  
+                    case 'd':
+                        b_path = true;
+                        path = optarg;
+                    continue;
 
-                case 's': //parametr -s (nepovinný) velikost specifikuje maximální velikost bloku v násobcích oktetů, které bude klient navrhovat pro přenos. Jako horní hranici, kterou klient odesílá, uvažujte nejmenší z MTU ze všech rozhraních, na které by klient mohl TFTP zprávu serveru odeslat (pozor, tedy potenicálně více než 512 B, co je v RFC).
-                    size = atoi(optarg);
-                    if(size <= 0){
-                        cerr << "Size must be number > 0\n";
-                        return 1;
-                    }
-                continue;
+                    case 't':
+                        timeout = atoi(optarg);
+                        if(timeout <= 0 && timeout > 300){
+                            cerr << "Timeout must be number: 0 < timeout < 256\n";
+                            throw std::exception();
+                        }
+                    continue;  
 
-                case 'm':
-                    b_multicast = true;
-                continue;
+                    case 's': //parametr -s (nepovinný) velikost specifikuje maximální velikost bloku v násobcích oktetů, které bude klient navrhovat pro přenos. Jako horní hranici, kterou klient odesílá, uvažujte nejmenší z MTU ze všech rozhraních, na které by klient mohl TFTP zprávu serveru odeslat (pozor, tedy potenicálně více než 512 B, co je v RFC).
+                        size = atoi(optarg);
+                        if(size <= 0){
+                            cerr << "Size must be number > 0\n";
+                            throw std::exception();
+                        }
+                    continue;
 
-                case 'c':
-                    mode = optarg;
-                continue;
+                    case 'm':
+                        b_multicast = true;
+                    continue;
 
-                case 'a':
-                    ip_port = optarg;
-                continue;
+                    case 'c':
+                        mode = optarg;
+                    continue;
 
-                
-                default :
-                    cerr << "Wrong parameter! \n";
-                    return 1;
-                break; 
+                    case 'a':
+                        ip_port = optarg;
+                    continue;
 
-                case -1:
+                    
+                    default :
+                        cerr << "Wrong parameter! \n";
+                        throw std::exception();
+                    break; 
+
+                    case -1:
+                    break;
+                }
                 break;
             }
-            break;
+        }
+        catch(...){
+            continue;
         }
 
         if (b_path == false){
             cerr << "Select path to file!\n";
-            return 1;
+            continue;
         }
 
         
@@ -161,16 +175,17 @@ int main(int argc, char *argv[]){
             }
             catch(exception){
                 cerr<< "Bad port:" << port_str << endl;
-                return 1;
+                continue;
             }
             if ((port < 0) |(port > 65535)){
                 cerr<< "Bad port:" << port_str << endl;
-                return 1;
+                continue;
             }       
         }
         string ip = regex_replace(ip_port,port_reg,"");
 
-        #if 1
+        //debug controla
+        #if 0
         cerr << "--------------------------------------------\n";
         cerr << "path:\t" << path << "\n";
         cerr << "timeout:" << timeout << "\n";
@@ -182,7 +197,6 @@ int main(int argc, char *argv[]){
         cerr << "--------------------------------------------\n";
         #endif
 
-        
         switch(behavior){
             case write_on_server:
                 write_on_server_main(path,timeout,size,b_multicast,mode,ip,port_str);
@@ -194,7 +208,7 @@ int main(int argc, char *argv[]){
 
             default:
             cerr << "Behaviour wasn't selected\n";
-            return 1;
+            continue;
         }
 
     }

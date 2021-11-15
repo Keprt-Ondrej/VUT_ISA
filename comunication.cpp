@@ -1,15 +1,16 @@
 #include "comunication.h"
-#include <arpa/inet.h>
-#include <chrono>
+#include <exception>
 
-comunication::comunication(std::string &ip,std::string &port,int timeout): port(port),ip(ip),connection_info(NULL),timeout(timeout){
-    
+
+comunication::comunication(std::string &ip,std::string &port,int timeout): port(port),ip(ip),connection_info(NULL),timeout(timeout){    
     return;
 }
 
-int comunication::create_socket(){ 
+void comunication::create_socket(){ 
     int domain;   
     struct addrinfo hint;
+
+    //rozhoduji, zda se bude posilat na ipv4 neb o ipv6
     if (ip.find(":") == -1){        
         domain = AF_INET;
     }
@@ -17,6 +18,7 @@ int comunication::create_socket(){
         domain = AF_INET6;
     }
 
+    //nastaveni napovedy pro hledani serveru
     hint.ai_family = domain;
     hint.ai_socktype = SOCK_DGRAM;
     hint.ai_flags = AI_PASSIVE;
@@ -26,17 +28,16 @@ int comunication::create_socket(){
     hint.ai_next = NULL;
 
     if ((socket_id = socket(domain,SOCK_DGRAM,0)) == -1){
-        std::cerr << "can not open socket\n"; //TODO
-        return 42;
+        print_time(); std::cerr << "Could not open socket\n";
+        throw std::exception();
     }
 
     int retval = getaddrinfo(ip.c_str(),port.c_str(),&hint,&connection_info);
     if (retval < 0){
-        std::cerr << "info failed \n" << ip <<"\t"<<port<<"\n"; //TODO
-        exit(42);
+        print_time(); std::cerr << "Get addr info failed \n" << ip <<"\t"<<port<<"\n"; 
+        throw std::exception();
     }
-    set_timeout(timeout);    
-    return 0;
+    set_timeout(timeout);
 }
 
 comunication::~comunication(){
@@ -50,25 +51,26 @@ int comunication::send_msg(size_t msg_size,const char *msg){
 
 int comunication::receive_msg(size_t buffer_size, char *msg){
     ssize_t ret_value = recvfrom(socket_id,msg,buffer_size,0,connection_info->ai_addr,&connection_info->ai_addrlen);
-    if (ret_value == -1){
+    if (ret_value == -1){   //pokud doslo k timeoutu
         print_time(); std::cerr << "TIMEOUTED\n";
         throw std::exception();
     }
     return ret_value;
 }
 
-void comunication::set_timeout(int timeout_extern){    
+void comunication::set_timeout(int timeout_extern){  //menil se timeout pomoci prikazu  
+    if(timeout_extern == -1){
+        timeout_extern = DEFAULT_TIMEOUT;
+    }
     struct timeval time;
-    time.tv_sec = (timeout_extern*6)+1;    //uvazujeme, ze server posila data opakovane 6x (refernci server pro windows), +1 pro zpozdeni PC
+    time.tv_sec = (timeout_extern*TIMEOT_CNT)+1;    //uvazujeme, ze server posila data opakovane TIMEOT_CNTx (refernci server pro windows), +1 pro zpozdeni PC
     time.tv_usec = 0;
     if (setsockopt(socket_id,SOL_SOCKET,SO_RCVTIMEO,&time,sizeof(time))){
-        std::cerr << "timeout setup fail\n";
+        print_time(); std::cerr << "timeout setup fail\n";
         throw std::exception();
     } 
     timeout = timeout_extern;
 }
-
-
 
 packet_data::packet_data(int blksize){
     buffer_size = blksize;
@@ -176,7 +178,6 @@ void packet_data::OACK_option_handler_timeout(int timeout){
 void packet_data::option_setup(int size,int timeout){
     if (size != TFTP_DEFAUL_BLOK_SIZE){
         add_string("blksize");
-        std::cerr << "size: " << size << "\n";
         add_string(std::to_string(size).c_str());
     }
     if (timeout != -1){
@@ -209,13 +210,8 @@ FILE *open_file(std::string &path,std::string &mode, char RW){
     }
     else{
         std::cerr << "Wrong mode!\n";
-        exit(42);
+        return NULL;
     }
-    mode_string[2] = '\0';
-
-    FILE * file = fopen(path.c_str(),mode_string);
-    if (file == NULL){
-        throw std::exception();
-    }
-    return file;
+    mode_string[2] = '\0'; 
+    return fopen(path.c_str(),mode_string);
 }

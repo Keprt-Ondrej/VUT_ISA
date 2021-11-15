@@ -1,5 +1,6 @@
 -W -d velky_soubor.pdf -a 192.168.1.32,69 -c octet -t 10 -s 2048
 -W -d velky_soubor.pdf -a 192.168.1.32,69 -c ascii -t 10 -s 2048
+-W -d velky_soubor.pdf -a 192.168.1.32,69 -c ascii -t 4846556 -s 456778978
 -W -d velky_soubor2.pdf -a fe80::7dd8:534e:9123:f0dc,69 -c octet
 -W -d velky_soubor2.pdf -a fe80::7dd8:534e:9123:f0dc,69 -c ascii
 -W -d README.txt -a fe80::7dd8:534e:9123:f0dc,69 -c ascii
@@ -8,8 +9,7 @@
 -R -d velky_soubor2.pdf -a 192.168.1.32,69 -c ascii -t 150   
 -R -d velky_soubor.pdf -a 192.168.1.32,69 -c ascii -t 2900
 -R -d velky_soubor2.pdf -a fe80::7dd8:534e:9123:f0dc,69 -c octet
--R -d velky_soubor.pdf -a 192.168.1.32,69 -c ascii -t 2900 -s 25456456 -c ascii
--R -d velky_soubor.pdf -c ascii -t 2900 -s 25456456 -c ascii
+-R -W -d velky_soubor.pdf -a 192.168.1.32,69 -c ascii -t 2900 -s 25456456 -c ascii
 end
 
 -R -d velky_soubor2.pdf -a 192.168.1.32,69 -c ascii -t 150 -s 2048
