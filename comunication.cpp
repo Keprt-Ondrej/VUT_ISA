@@ -1,5 +1,6 @@
 #include "comunication.h"
 #include <arpa/inet.h>
+#include "functions.h"
 
 comunication::comunication(std::string &ip,std::string &port,int timeout): port(port),ip(ip),connection_info(NULL),timeout(timeout){
     
@@ -50,13 +51,13 @@ int comunication::send_msg(size_t msg_size,const char *msg){
 int comunication::receive_msg(size_t buffer_size, char *msg){
     ssize_t ret_value = recvfrom(socket_id,msg,buffer_size,0,connection_info->ai_addr,&connection_info->ai_addrlen);
     if (ret_value == -1){
-        std::cerr << "TIMEOUTED\n";
+        print_time(); std::cerr << "TIMEOUTED\n";
         throw std::exception();
     }
     return ret_value;
 }
 
-int comunication::set_timeout(int timeout_extern){    
+void comunication::set_timeout(int timeout_extern){    
     struct timeval time;
     time.tv_sec = (timeout_extern*6)+1;    //uvazujeme, ze server posila data opakovane 6x (refernci server pro windows), +1 pro zpozdeni PC
     time.tv_usec = 0;
@@ -65,16 +66,9 @@ int comunication::set_timeout(int timeout_extern){
         throw std::exception();
     } 
     timeout = timeout_extern;
-    return 0;
 }
 
-void packet_data::change_buffer(size_t blksize){
-    delete(buffer);
-    buffer_size = blksize;
-    packet_size = blksize + 4;  // 2 bytes opcode, 2 bytes block number
-    buffer = new char[packet_size]();
-    end_buffer = buffer;
-}
+
 
 packet_data::packet_data(int blksize){
     buffer_size = blksize;
@@ -84,7 +78,7 @@ packet_data::packet_data(int blksize){
 }
 
 packet_data::~packet_data(){
-    delete(buffer);
+    delete[] buffer;
 }
 
 void packet_data::add_2B(int16_t c){
@@ -147,4 +141,46 @@ void packet_data::create_ACK(int16_t opcode,int16_t block){
 void packet_data::clear_buffer(){
     memset(buffer,0,buffer_size);
     end_buffer = buffer;
+}
+
+void packet_data::change_buffer(size_t blksize){
+    delete[] buffer;
+    buffer_size = blksize;
+    packet_size = blksize + 4;  // 2 bytes opcode, 2 bytes block number
+    buffer = new char[packet_size]();
+    end_buffer = buffer;
+}
+
+void packet_data::OACK_option_handler_blksize(int size){
+    if(size != TFTP_DEFAUL_BLOK_SIZE){
+        std::string{get_string()}; //zahozeni identifikatoru pro bloksize
+        size_t real_size = atoi(std::string{get_string()}.c_str());
+        if (real_size != size){
+            change_buffer(real_size);
+            print_time();std::cerr << "Server handle only " << real_size << " B block, resume transfer with "<<real_size << " B size\n";
+        }               
+    }
+}
+
+void packet_data::OACK_option_handler_timeout(int timeout){
+    if(timeout != -1){  //menil se timeout pomoci prikazu
+        std::string{get_string()}; //zahozeni identifikatoru pro bloksize
+        size_t real_timeout = atoi(std::string{get_string()}.c_str());                
+        if (real_timeout == 0){ //pokud server vrati alternativni hodnotu timeoutu, zmeni ji v nastaveni
+            //server zamitnul timeout hodnotu
+            print_time(); std::cerr << "Server refused using timeout: "<< timeout << ", transfer resume with timeout: " << DEFAULT_TIMEOUT << "\n";
+        }                
+    }
+}
+
+void packet_data::option_setup(int size,int timeout){
+    if (size != TFTP_DEFAUL_BLOK_SIZE){
+        add_string("blksize");
+        std::cerr << "size: " << size << "\n";
+        add_string(std::to_string(size).c_str());
+    }
+    if (timeout != -1){
+        add_string("timeout");
+        add_string(std::to_string(timeout).c_str());
+    }
 }

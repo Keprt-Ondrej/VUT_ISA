@@ -5,14 +5,17 @@
 #include <chrono>
 #include <fstream>
 
-void print_time(){
-    using namespace std;
-    std::time_t result = std::time(nullptr);
-    std::tm *time = std::localtime(&result);
-    cout <<"["<<
-    time->tm_year+1900<<"-"<<time->tm_mday<<"-"
-    <<time->tm_mon + 1 <<" "<<time->tm_hour<<":"
-    <<time->tm_min<<":"<<time->tm_sec<< "] ";
+void print_time(){      //https://stackoverflow.com/questions/16077299/how-to-print-current-time-with-milliseconds-using-c-c11
+    using std::chrono::system_clock;
+    auto currentTime = std::chrono::system_clock::now();
+    char buffer[80];
+    auto transformed = currentTime.time_since_epoch().count() / 1000000;
+    auto millis = transformed % 1000;
+    std::time_t tt;
+    tt = system_clock::to_time_t ( currentTime );
+    auto timeinfo = localtime (&tt);
+    strftime (buffer,80,"%F %H:%M:%S",timeinfo);
+    std::cout <<"[" << std::string(buffer)<<"."<< (int)millis << "] ";
 }
 
 FILE *open_file(std::string &path,std::string &mode, char RW){

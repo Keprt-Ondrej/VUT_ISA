@@ -38,7 +38,7 @@ class comunication{
     int receive_msg(size_t buffer_size, char *msg);
 
     int get_mtu_size();
-    int set_timeout(int timeout);
+    void set_timeout(int timeout);
 
     public:
     int socket_id;
@@ -54,6 +54,7 @@ class packet_data{
     public:
     packet_data(int blksize);
     ~packet_data();
+    void option_setup(int size,int timeout);
     void start_buffer();
     void print_buffer();
     void add_2B(int16_t c);
@@ -66,6 +67,8 @@ class packet_data{
     void create_ACK(int16_t opcode,int16_t block);
     void clear_buffer();
     void change_buffer(size_t blk_size);
+    void OACK_option_handler_timeout(int timeout);
+    void OACK_option_handler_blksize(int size);
 
     public:
     int buffer_size;
@@ -74,10 +77,8 @@ class packet_data{
     char *end_buffer;
 };
 
-
-
-
-
+void OACK_option_handler_blksize(comunication &klient,packet_data &packet,int size);
+void OACK_option_handler_timeout(comunication &klient,packet_data &packet,int timeout);
 
 
 

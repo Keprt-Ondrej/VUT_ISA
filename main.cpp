@@ -6,7 +6,7 @@
 
 //https://datatracker.ietf.org/doc/html/rfc1350
 
-unsigned int word_counter(std::string &str){
+unsigned int arg_preparer(std::string &str){
     unsigned int i = 0;
     unsigned int space_count = 0;
     char old = '\0';
@@ -18,6 +18,10 @@ unsigned int word_counter(std::string &str){
         if (isspace(str.at(i))){
             if (old != str.at(i)){
                 space_count++;
+            }
+            else{
+                //str.erase(i,1);
+                //i--;
             }                       
         }
         old = str.at(i);
@@ -29,8 +33,6 @@ unsigned int word_counter(std::string &str){
     else return ++space_count;
 }
 
-
-
 int main(int argc, char *argv[]){
     using namespace std;
     while(1){
@@ -41,20 +43,21 @@ int main(int argc, char *argv[]){
             return 0;
         }
 
-        unsigned int word_count = word_counter(start);
+          
+        unsigned int argc = arg_preparer(start);
         start + "b";    //aby nedoslo k segfaultu, kdyz za posledni budu vkladat \0
-        word_count++;       //bezne je v argc na prvnim miste jmeno souboru, ze ho musim "umele pridat"
-        char *karel[word_count];
+        argc++;       //bezne je v argc na prvnim miste jmeno souboru, ze ho musim "umele pridat"
+        char *arguments[argc];
         char *p =const_cast<char *>(start.c_str());        
-        for(int i = 1; i < word_count;i++){
-            karel[i] = p;
+        for(int i = 1; i < argc;i++){
+            arguments[i] = p;
             while(!isspace(p[0])){
                 p++;
             }
             p[0] = '\0';
             p++;
         }
-
+        
         behavior_t behavior = undefined;
         bool b_path = false;
         string path;    
@@ -66,7 +69,7 @@ int main(int argc, char *argv[]){
 
         optind = 1;
         for(;;){
-            switch(getopt(word_count,karel, "RWd:pt:Ts:Smc:Ca:Ah")){ 
+            switch(getopt(argc,arguments, "RWd:pt:Ts:Smc:Ca:Ah")){ 
                 case 'h':
                     cout << "help:\n";
                     cout << "-R/W -d path_to_file -t timeout -s block_size -a address,port -c netascii/octet\n";
@@ -144,10 +147,12 @@ int main(int argc, char *argv[]){
             return 1;
         }
 
+        
         string port_str = "";
         smatch match;
-        regex port_reg (",[0-9a-zA-Z]*");
+        regex port_reg(",[0-9a-zA-Z]*");
         int port;
+        
         regex_search(ip_port,match,port_reg);
         if (match.ready()){
             port_str = match.str(0);
@@ -178,6 +183,7 @@ int main(int argc, char *argv[]){
         cerr << "--------------------------------------------\n";
         #endif
 
+        
         switch(behavior){
             case write_on_server:
                 write_on_server_main(path,timeout,size,b_multicast,mode,ip,port_str);
