@@ -1,45 +1,41 @@
 \documentclass[11pt]{article}
 \usepackage[czech]{babel}
-\usepackage[a4paper, left=0.5cm,top=2.5cm,textwidth=20cm]{geometry}
-\usepackage[IL2]{fontenc}
+\usepackage[a4paper, left=2.0cm,top=3.0cm,textheight=24.0cm,textwidth=17.0cm]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{times}
-
-\usepackage{enumitem}
+\usepackage{csquotes}
+\usepackage{marvosym}
+\usepackage{url}
+\usepackage[hidelinks,unicode]{hyperref}
 \usepackage{graphicx}
-\usepackage{xcolor}
+\def\UrlBreaks{\do\/\do-}
+\Urlmuskip=0mu plus 1mu
 
-\setlength{\parindent}{1em}
-\usepackage{hyperref}
-\usepackage{color}
-
-\newcommand{\term}[1]{{\color{red}#1}}
-\newcommand{\arrow}{\;$\rightarrow$\;}
-
+\graphicspath{ {./pics/} }
 
 \hypersetup{
     linktocpage,
+    allcolors=blue,
     colorlinks=true, %set true if you want colored links
     linktoc=all,     %set to all if you want both sections and subsections linked
     linkcolor=blue,  %choose some color if you want links to stand out
+    citecolor=blue,
 }
 
-
+\setlength{\parindent}{1em}
 
 \begin{document}
+\selectlanguage{czech}
 \begin{titlepage}
-    \begin{center}
-        \includegraphics[scale=0.8]{pics/fitlogo.pdf} \\
-    
-        \textsc{\Huge Projektová dokumentace}\\
-        
+    \begin{center}    
+        \textsc{\Huge{Vysoké učení technické v~Brně} \\[0.4em] \huge{Fakulta informačních technologií} }\\
         \vspace{\stretch{0.382}}
-        \LARGE
-            Implementace TFTP Klienta
+        \LARGE{Síťové aplikace a správa sítí}\\
+        \Huge{Implementace TFTP klienta}
         \vspace{\stretch{0.618}}  
     \end{center}
-    
-
+    {\Large\hfill Ondřej Keprt}\\
+    {\Large \today \hfill \href{mailto:xkeprt03@stud.fit.vutbr.cz}{xkeprt03@stud.fit.vutbr.cz}}
 \end{titlepage}
 
 \newpage
@@ -48,9 +44,125 @@
 \newpage
 \setcounter{page}{1}
 
-%end of uvod, write sections here:
+\section{Úvod}
+Cílem projektu bylo implementovat Trivial File Transfer Protocol (TFTP) klienta. TFTP je jednoduchý protokol pro stahovaní dat serveru nebo ukládání dat na server.
+Implementovaný klient nepodporuje mód přenosu \texttt{mail}.
 
-\section*{Úvod}
-Tohle je uvod
+\section{Protokol}
+\subsection{Zakladní verze}
+Základní verze je specifikováná v \texttt{RFC~1350}. \cite{revision2}
 
-\end{document} 
+Protokol pracuje s UDP datagramy, tedy s nespolehlivým doručováním paketů. Proto je protokol opatřen vlastním mechanismem pro potvrzení dat.
+Klient zasílá požadavek na server ve kterém specifikuje, zda chce data číst nebo nahrávat. Na první místo v paketu tedy uloží dvou bytovou 
+hodnotu 1 (čtení) nebo 2 (zápis). Další položkou je řetězec znaků, ukončených bytem s hodnotou 0, který specifikuje název souboru. Další položkou paketu
+je pak řetězec znaků , který určuje mód přenosu (binary/octet nebo ascii/netascii) \ref{pict:RFC_1350_packets}.
+
+Server na to odpovídá datovým paketem, kde na prvním místě je dvoubytová hodnota specifikující data paket~(3), následuje dvou bytová hodnota,
+která specifikuje blok dat. Poté následuje n\footnote{Základní verze udává velikost 512 bytů} bytů. Pokud je počet dat menší jak n, jedná se o poslední data transportu \ref{pict:RFC_1350_packets}.
+
+Uživatel i server na data odpovidají potvrzovacím paketem, který má dvou bytovou hodnotu pro potvrzení~(4). Následuje dvou bytová hodnota, která určuje přijatý blok dat \ref{pict:RFC_1350_packets}.
+
+Pokud nastane nějaká chyba, je zaslán paket, který značí chybu. Obsahuje dvou bytovou hodnotu, specifikující chybový paket~(5), dvou bytovou hodnotu pro specifikaci
+chyby a následuje řetězec znaků, obsahující chybovou hlášku \ref{pict:RFC_1350_packets}.  
+
+\begin{figure}[ht]
+    \label{pict:RFC_1350_packets} 
+    \centering
+    \includegraphics[scale=2.0]{RFC_1350_packets.eps}
+    \caption{Data v paketech ve verzi 2 bez rozšiřujících voleb \cite{revision2}}        
+\end{figure}
+
+\subsection{Rozšířená verze}
+Na základní verzi navazuji rozšíření, která upravují parametry přenosu dat.
+
+V \texttt{RFC 2347} je specifikován způsob zasílání a potvrzování voleb. Za packet ze základní verze přidávám postupně volby a to způsobem řetězec znaků,
+který specifikuje volbu. Následuje řetězec znaků, který specifikuje hodnotu volby. Pokud chceme více voleb najednou, přidáváme nadále
+na konec paketu vždy specifikaci volby a její hodnotu, stejně jako při první volbě \ref{pict:RFC_1347_option_list.eps}. 
+
+\begin{figure}[ht]
+    \label{pict:RFC_1347_option_list.eps} 
+    \centering
+    \includegraphics[scale=2.0]{RFC_2347_option_list.eps}
+    \caption{Data v paketech v rozšíření \cite{option_extension}}        
+\end{figure}
+
+Na tento paket server odpovídá paketem, který obsahuje dvou bytovou hodnotu pro potvrzení přijetí voleb (6), následovaný žetězcem znaků pro specifikaci znaků a řetězcem pro její hodnotu.
+Pokud uživatel, chce číst ze serveru, tento paket musí potvrdit datový paketem, jako hodnotu bloku uvede 0. Server poté začne posílat/přijímat datové pakety. Pokud uživatel chce zapisovat na server, odesílá rovnou první datový paket \ref{pict:RFC_1347_option_list.eps}. \cite{option_extension}
+
+\begin{figure}[ht]
+    \label{pict:RFC_1347_option_list_ack.eps} 
+    \centering
+    \includegraphics[scale=2.0]{RFC_2347_option_list_ack.eps}
+    \caption{Paket potvrzující rozšíření \cite{option_extension}}        
+\end{figure}
+
+Jedna z voleb je \texttt{tsize}, které specifikuje velikost přenášeného souboru \ref{pict:RFC_1349_tsize.eps}.
+
+\begin{figure}[ht]
+    \label{pict:RFC_1349_tsize.eps} 
+    \centering
+    \includegraphics[scale=2.0]{RFC_2349_tsize.eps}
+    \caption{Paket pro volbu tsize \cite{extension_timeout_tsize}}        
+\end{figure}
+
+Další volbou je \texttt{timeout}, která specifikuje dobu, po kterou server čeká před znovu poslání nepotvrzených dat.
+Pokud server odmítne toto nastavení, v odpovědi tuto volbu neuvede \ref{pict:RFC_1349_timeout.eps}.
+
+\begin{figure}[ht]
+    \label{pict:RFC_1349_timeout.eps} 
+    \centering
+    \includegraphics[scale=2.0]{RFC_2349_timeoUt.eps}
+    \caption{Paket pro volbu timeout \cite{extension_timeout_tsize}}        
+\end{figure}
+
+Rozšíření specifikující velikost bloku dat přenášených dat nese název \texttt{blksize}. Pokud server odmítne tuto hodnotu,
+v odpovědi specifikuje největší akceptovatelnou velikost, která je menší, než kterou uživatel navrhoval \ref{pict:RFC_1348_blksize.eps}.
+
+\begin{figure}[ht]
+    \label{pict:RFC_1348_blksize.eps} 
+    \centering
+    \includegraphics[scale=2.0]{RFC_2348_blksize}
+    \caption{Paket pro volbu timeout \cite{extension_blksize}}        
+\end{figure}
+
+\subsection{Výhody a nevýhody}
+Jde o jednoduchý protokol, který není náročný na implementaci a tedy na místo v paměti. Typicky se využíval pro bootování 
+operačního systému na bezdiskových strojích ze serveru v místní síti. \cite{WIKI}
+
+Protokol se nehodí pro komunikaci mimo lokální síť protože není nijak zabezpečený.
+
+Protokol se nehodí pro sítě, které mají velkou latenci. Jelikož protokol posílá jeden paket a čeká, až protistrana potvrdí jeho přijetí. 
+Najednou se tedy posílá pouze jeden paket a to prodlužuje dobu přenosu. \cite{WIKI}
+ 
+\section{Implementace}
+Program byl testován pomocí serveru \href{https://pjo2.github.io/tftpd64/}{TFTPD32}. Podrobný popis implementace a postup programu je popsán přímo ve zdrojových kódech programu.
+
+\subsection{Příkazová řádka}
+Klient, kterého jsem vytvořil obsahuje příkazovou řádku, na kterou se zadávají parametry pro přenos. Tato příkazová řádka je blokující, tedy
+další příkaz může být zadán až po ukončení přenosu. Pomocí příkazy \texttt{-h} se zobrazí nápověda, jaké parametry lze možné zadávat. Pokud uživatel
+zadá nesprávné parametry, program vypíše chybovou hlášku a bude očekávat další vstup. Program lze ukončit napsaním \texttt{end}.
+
+\subsection{Reakce na volby}
+Pokud server nepodporoval volby, uživatel byl o tomto obeznámen a přenos dat pokračoval dál podle znění \texttt{RFC~1350}. ~\cite{revision2}
+Tady datový blok měl velikost 512 bytů a žádné další volby nebyly aplikovány.
+
+Při každém odesílání požadavku se posílala volba \texttt{tsize}, což je velikost souboru. Pokud server při čtení odmítl sdělit velikost souboru a začal 
+odesílat rovnou tato data byla tato data přijata. Pokud server vrátil velikost požadovaného souboru, ověřilo se volné místo na disku, při dostatku
+volného místa se ze pokračovalo v přenosu, opačně se odeslal chybový paket s příslušným kódem pro nedostatek paměti.
+
+Pokud server při volbě \texttt{blksize} odpověděl menší velikostí datového bloku, přenos pokračoval přenosem těchto menších bloků a uživatel
+byl na výstupu obeznámen s touto skutečností.
+
+Pokud uživatel zadal volbu \texttt{timeout} byla tato časová doba okamžitě nastavena pro přenos. Pokud server odmínul tudo dobu, \texttt{timeout}
+klienta byl nastavena na základní dobu (5 sekund).
+
+\subsection{Neimplementováno}
+Klient nepodporuje možnost posílání dat pomocí multicastové adresy. \\
+Klient není schopen přizpůsobit velikost bloku dat rozhraní MTU.
+
+\newpage
+%http://www.fit.vutbr.cz/~martinek/latex/czechiso.html, soubor byl, mírně upraven
+\bibliographystyle{czechiso} 
+\renewcommand{\refname}{Literatura}
+\bibliography{zdroje}
+\end{document}

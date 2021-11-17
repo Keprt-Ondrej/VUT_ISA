@@ -50,8 +50,8 @@ class comunication{
      * 
      * @param ip adresa serveru
      * @param port port, kde server nasloucha
-     * @param timeout doba timeoutu
-     * @param use_multiply_timeout pokud chci nasobit dobu cekani poctem cekani,pocet =  TIMEOUT_CNT
+     * @param timeout nastavi timeout zadany, uzivatelem nebo defaultni, pokud server odmitne uzivateluv timeout, ve funkci OACK_option_handler_timeout nastavi timeout klienta na defaultni velikost
+     * @param use_multiply_timeout pokud chci nasobit dobu cekani poctem cekani,pocet =  TIMEOUT_CNT, u cteni chci mit timeout delsi
      * @author Ondřej Keprt (xkeprt03@stud.fit.vutbr.cz)
     */
     comunication(std::string &ip,std::string &port,int timeout,bool use_multiply_timeout);
@@ -99,11 +99,13 @@ class comunication{
     */
     int receive_msg(size_t buffer_size, char *msg);
 
-    private:
-    int socket_id;      //< deskriptor socketu
-    struct addrinfo *connection_info;   //< informace ulozene o serveru
+    public:
     std::string ip;     //< adresa serveru
     std::string &port;  //<port serveru
+
+    private:    
+    int socket_id;      //< deskriptor socketu
+    struct addrinfo *connection_info;   //< informace ulozene o serveru
     int timeout;        //nastaveny timeout
     int f_mtu_size;     //< nejvetsi mozna velikost cesty <-- neni implementovano
     bool use_multiply_timeout;      //< podle tohoto boolu rozhodujeme, zda se pri nastavovani timeoutu bude nasobit konstantou TIMEOUT_CNT

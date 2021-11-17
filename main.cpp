@@ -8,6 +8,8 @@
  * 
 */
 
+//test gitu
+
 #include "main.h"
 #include "read_from_server.h"
 #include "write_on_server.h"
